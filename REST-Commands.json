@@ -1,0 +1,60 @@
+{
+    "Schools":
+    {
+        "HTTP-Method":"POST",
+        "URI":"https://mobile.webuntis.com/ms/schoolquery2",
+        "Body":
+        {
+            "id":"wu_schulsuche-1540287232268",
+            "method":"searchSchool",
+            "params":
+            [
+                {"search":""}
+            ],
+            "jsonrpc":"2.0"
+        }
+    },
+
+    "Login":
+    {
+        "HTTP-Method":"POST",
+        "URI":"https://mese.webuntis.com/WebUntis/j_spring_security_check",
+        "Body":
+        {
+            "school":"htbla linz leonding",
+            "j_username":"",
+            "j_password":"",
+            "token":""
+        }
+    },
+
+    "DayLesson":
+    {
+        "HTTP-Method":"GET",
+        "URI":"https://mese.webuntis.com/WebUntis/api/daytimetable/dayLesson?date=20181023&id=728&type=5",
+        "Body":
+        {
+            
+        }
+    },
+
+    "TeacherId":
+    {
+        "HTTP-Method":"GET",
+        "URI":"https://mese.webuntis.com/WebUntis/api/public/timetable/weekly/pageconfig?type=2&date=2018-10-23",
+        "Body":
+        {
+            
+        }
+    },
+
+    "StudentId":
+    {
+        "HTTP-Method":"GET",
+        "URI":"https://mese.webuntis.com/WebUntis/api/public/timetable/weekly/pageconfig?type=5&date=2018-10-23",
+        "Body":
+        {
+            
+        }
+    }
+}
