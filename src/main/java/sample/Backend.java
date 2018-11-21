@@ -25,6 +25,7 @@ public class Backend {
     private NewCookie loginCookie;
     private String serverName;
     private JsonArray schoolList;
+    private boolean loggedIn = false;
 
     public static Backend getInstance() {
         if (instance == null)
@@ -76,14 +77,19 @@ public class Backend {
             Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.form(formData));
             if (response == null || response.getStatus() == 302){
                 System.out.println("Failed");
+                loggedIn = false;
+                loginCookie = null;
             }
             else if (response.readEntity(String.class).contains("Your Browser is not supported. Please use IE10 or later!")){
                 System.out.println("Failed");
+                loggedIn = false;
+                loginCookie = null;
             }
             else if (response.getStatus() == 200) {
             Map<String, NewCookie> map = response.getCookies();
             System.out.println("Erfolgreich");
             loginCookie = map.get("JSESSIONID");
+            loggedIn = true;
             }
         }catch (Exception e){
             System.out.println("Falsches Passwort");
@@ -91,45 +97,47 @@ public class Backend {
     }
 
     public List<String> getDailyHours(){
-        Response response;
-        this.target = this.client.target("https://"+serverName+"/WebUntis/api/app/config");
-        response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
-        JsonObject object = response.readEntity(JsonObject.class).getJsonObject("data").getJsonObject("loginServiceConfig").getJsonObject("user");
-        //System.out.println(object);
-        int id = object.getInt("personId");
-        int type = object.getInt("roleId");
-        //System.out.println(id);
-        LocalDate date = LocalDate.now();
-        String dateCode = date.getYear()+""+date.getMonthValue()+date.getDayOfMonth();
-        String url = "https://"+serverName+"/WebUntis/api/daytimetable/dayLesson?date="+dateCode+"&id=" + String.valueOf(id) + "&type="+type;
-
-        this.target = this.client.target(url);
-        response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
-        JsonArray jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
-
         List<String> list = new LinkedList<>();
+        if (loggedIn == true) {
+            Response response;
+            this.target = this.client.target("https://" + serverName + "/WebUntis/api/app/config");
+            response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
+            JsonObject object = response.readEntity(JsonObject.class).getJsonObject("data").getJsonObject("loginServiceConfig").getJsonObject("user");
+            //System.out.println(object);
+            int id = object.getInt("personId");
+            int type = object.getInt("roleId");
+            //System.out.println(id);
+            LocalDate date = LocalDate.now();
+            String dateCode = date.getYear() + "" + date.getMonthValue() + date.getDayOfMonth();
+            String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
+            this.target = this.client.target(url);
+            response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
+            JsonArray jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
 
-        for(int x = 0; x < jsonArray.size(); x++){
-            JsonObject jsonObject = jsonArray.getJsonObject(x);
-            String subjects = jsonObject.getString("subject");
-            String startTime = String.valueOf(jsonObject.getInt("startTime"));
-            String subTime = startTime.substring(startTime.length()-2);
-            String subTimePart1 = startTime.substring(0, startTime.length()-2);
-            startTime = subTimePart1+":"+subTime;
-
-            String endTime = String.valueOf(jsonObject.getInt("endTime"));
-            subTime = endTime.substring(endTime.length()-2);
-            subTimePart1 = endTime.substring(0, endTime.length()-2);
-            endTime = subTimePart1+":"+subTime;
 
 
-            list.add(subjects + "  " + startTime + "-" + endTime);
+            for (int x = 0; x < jsonArray.size(); x++) {
+                JsonObject jsonObject = jsonArray.getJsonObject(x);
+                String subjects = jsonObject.getString("subject");
+                String startTime = String.valueOf(jsonObject.getInt("startTime"));
+                String subTime = startTime.substring(startTime.length() - 2);
+                String subTimePart1 = startTime.substring(0, startTime.length() - 2);
+                startTime = subTimePart1 + ":" + subTime;
 
-            //System.out.println(subjects + "  " + startTime + " " + endTime);
+                String endTime = String.valueOf(jsonObject.getInt("endTime"));
+                subTime = endTime.substring(endTime.length() - 2);
+                subTimePart1 = endTime.substring(0, endTime.length() - 2);
+                endTime = subTimePart1 + ":" + subTime;
+
+
+                list.add(subjects + "  " + startTime + "-" + endTime);
+
+                //System.out.println(subjects + "  " + startTime + " " + endTime);
+            }
+
+
         }
-
         return list;
-
     }
 
     public JsonObject getSchoolQueryResults(String input){
