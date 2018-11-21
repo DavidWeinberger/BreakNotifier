@@ -1,6 +1,8 @@
 package sample;
 
 import javafx.beans.binding.StringBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -15,7 +17,10 @@ import javafx.scene.control.TextField;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.Json;
@@ -40,7 +45,7 @@ public class Controller extends Thread {
     private PasswordField passwordField;
 
     @FXML
-    private ListView<?> hours;
+    private ListView<String> hours;
     @FXML
     private Button selectSchoolBT;
 
@@ -77,7 +82,7 @@ public class Controller extends Thread {
     @FXML
     public void run(){
 
-        while (true) {
+        while (running) {
 
             try {
                 BufferedReader br = new BufferedReader(new FileReader("src/package.json"));
@@ -118,41 +123,19 @@ public class Controller extends Thread {
 
     @FXML
     private void login(){
+
+        running=false;
+        selectSchoolBT.disableProperty().setValue(true);
         String username = usernameField.getText();
         String password = passwordField.getText();
-        this.client = ClientBuilder.newClient();
-        String serverName = schoolObject.getString("server");
-        this.target = this.client.target("https://"+serverName+"/WebUntis/j_spring_security_check");
-        MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
-        formData.add("school", "htbla linz leonding");
-        formData.add("j_username", username);
-        formData.add("j_password", password);
-        formData.add("token", "");
 
-        Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.form(formData));
-        if (response.getStatus() == 200) {
-            Map<String, NewCookie> map = response.getCookies();
-            //System.out.println(payload);
 
-            this.target = this.client.target("https://mese.webuntis.com/WebUntis/api/app/config");
-            response = target.request(MediaType.APPLICATION_JSON).cookie(map.get("JSESSIONID")).get();
-            JsonObject object = response.readEntity(JsonObject.class).getJsonObject("data").getJsonObject("loginServiceConfig").getJsonObject("user");
-            //System.out.println(object);
-            int id = object.getInt("personId");
-            int type = object.getInt("roleId");
-            //System.out.println(id);
-            LocalDate date = LocalDate.now();
-            String dateCode = date.getYear()+""+date.getMonthValue()+date.getDayOfMonth();
-            String url = "https://mese.webuntis.com/WebUntis/api/daytimetable/dayLesson?date="+dateCode+"&id=" + String.valueOf(id) + "&type="+type;
+        Backend.getInstance().login(username,password);
 
-            this.target = this.client.target(url);
-            response = target.request(MediaType.APPLICATION_JSON).cookie(map.get("JSESSIONID")).get();
-            String payload = response.readEntity(String.class);
-            System.out.println(payload);
+
+
+        ObservableList<String> itemList = FXCollections.observableArrayList(Backend.getInstance().getDailyHours());
+        hours.setItems(itemList);
+
         }
     }
-
-
-
-
-}

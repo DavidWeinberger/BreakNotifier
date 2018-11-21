@@ -25,7 +25,7 @@
    <children>
       <BorderPane prefHeight="553.0" prefWidth="863.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <top>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="BreakNotifier Prototyp" BorderPane.alignment="CENTER">
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="BreakNotifier Prototype" BorderPane.alignment="CENTER">
                <font>
                   <Font size="32.0" />
                </font>

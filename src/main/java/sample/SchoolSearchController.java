@@ -43,25 +43,15 @@ public class SchoolSearchController {
     @FXML
     public void handleInput(ActionEvent event){
         this.client = ClientBuilder.newClient();
-        this.target = this.client.target("https://mobile.webuntis.com/ms/schoolquery2");
         String input = schoolNameField.getText();
-        JsonArray values = javax.json.Json.createArrayBuilder().add(javax.json.Json.createObjectBuilder().add("search",input)).build();
-
-        JsonObject obj = javax.json.Json.createObjectBuilder().add("id", "wu_schulsuche-1542658388792").add("jsonrpc","2.0").add("method","searchSchool").add("params", values).build();
-
-        Response response = this.target.request(MediaType.APPLICATION_JSON).post(Entity.json(obj));
-        JsonObject resultList = response.readEntity(JsonObject.class);
+        JsonObject resultList = Backend.getInstance().getSchoolQueryResults(schoolNameField.getText());
         if (resultList.getJsonObject("error") != null){
             errorLabel.setText("Zu viele Ergebnisse");
         }
         else {
             errorLabel.setText("");
-            this.schoolList = resultList.getJsonObject("result").getJsonArray("schools");
-            List<String> list = new LinkedList<>();
-            for (int i = 0; i < schoolList.size(); i++) {
-                list.add(schoolList.getJsonObject(i).getString("displayName"));
-            }
-            ObservableList<String> itemList = FXCollections.observableArrayList(list);
+
+            ObservableList<String> itemList = FXCollections.observableArrayList(Backend.getInstance().getFormatedSchoolResult(resultList));
             listView.setItems(itemList);
             //System.out.println(schoolList.size());
         }
@@ -71,22 +61,9 @@ public class SchoolSearchController {
     public void handleSave(ActionEvent event){
         String selected = listView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            for (int i = 0; i < schoolList.size(); i++) {
-                if (schoolList.getJsonObject(i).getString("displayName").equals(selected)) {
-                    try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                            new FileOutputStream("src/package.json"), "utf-8"))) {
-                        writer.write(schoolList.getJsonObject(i).toString());
-                        Stage stage = (Stage) saveBT.getScene().getWindow();
-                        stage.close();
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
+            if (Backend.getInstance().setSave(selected)){
+                Stage stage = (Stage) saveBT.getScene().getWindow();
+                stage.close();
             }
         }
     }
