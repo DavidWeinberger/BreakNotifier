@@ -135,6 +135,7 @@ public class Controller extends Thread {
 
 
         ObservableList<String> itemList = FXCollections.observableArrayList(Backend.getInstance().getDailyHours());
+
         hours.setItems(itemList);
 
         }

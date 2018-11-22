@@ -5,10 +5,10 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -21,7 +21,6 @@ import javax.ws.rs.core.Response;
 import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
-import javafx.scene.control.Button;
 
 public class SchoolSearchController {
     private Client client;
@@ -54,6 +53,7 @@ public class SchoolSearchController {
             ObservableList<String> itemList = FXCollections.observableArrayList(Backend.getInstance().getFormatedSchoolResult(resultList));
             listView.setItems(itemList);
             //System.out.println(schoolList.size());
+
         }
     }
 
