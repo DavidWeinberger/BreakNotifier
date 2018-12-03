@@ -1,34 +1,25 @@
 package sample;
 
-import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.text.Text;
-import javafx.scene.*;
 import javafx.fxml.FXMLLoader;
-import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
-import java.io.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import javax.json.JsonArray;
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import javax.json.Json;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.*;
+import java.io.*;
 
 public class Controller extends Thread {
     private boolean running = true;
@@ -52,13 +43,13 @@ public class Controller extends Thread {
     @FXML
     private Text schoolLabel;
 
-    public Controller(){
+    public Controller() {
 
         con.start();
     }
 
     @FXML
-    private void BtSelectSchool(ActionEvent event){
+    private void BtSelectSchool(ActionEvent event) {
         Parent root;
         //running = false;
         try {
@@ -70,9 +61,7 @@ public class Controller extends Thread {
             stage.show();
 
 
-
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         //running=true;
@@ -80,7 +69,7 @@ public class Controller extends Thread {
     }
 
     @FXML
-    public void run(){
+    public void run() {
 
         while (running) {
 
@@ -94,10 +83,9 @@ public class Controller extends Thread {
                         schoolObject = reader.readObject();
 
                         reader.close();
-                        if(schoolLabel != null){
+                        if (schoolLabel != null) {
                             String in = schoolObject.getString("displayName");
-                            if (!in.equals(schoolLabel.getText()))
-                            {
+                            if (!in.equals(schoolLabel.getText())) {
                                 schoolLabel.setText(in);
 
                             }
@@ -122,21 +110,20 @@ public class Controller extends Thread {
     }
 
     @FXML
-    private void login(){
+    private void login() {
 
-        running=false;
+        running = false;
         selectSchoolBT.disableProperty().setValue(true);
         String username = usernameField.getText();
         String password = passwordField.getText();
 
 
-        Backend.getInstance().login(username,password);
-
+        Backend.getInstance().login(username, password);
 
 
         ObservableList<String> itemList = FXCollections.observableArrayList(Backend.getInstance().getDailyHours());
 
         hours.setItems(itemList);
 
-        }
     }
+}

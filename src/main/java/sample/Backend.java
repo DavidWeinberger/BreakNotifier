@@ -13,6 +13,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +43,7 @@ public class Backend {
 
     }
 
-    public void readSchoolObj(){
+    public void readSchoolObj(){ //Lest Schulnamen aus der Package.json Datei aus.
         try {
             BufferedReader br = new BufferedReader(new FileReader("src/package.json"));
             if (br.readLine() != null) {
@@ -67,14 +69,16 @@ public class Backend {
     public void login(String username, String password){
         readSchoolObj();
         serverName = schoolObject.getString("server");
-        this.target = this.client.target("https://"+serverName+"/WebUntis/j_spring_security_check");
+        this.target = this.client.target("https://"+serverName+"/WebUntis/j_spring_security_check"); //Setzt das WebTarget auf den Secrurity Check vom WebUntis
         MultivaluedMap<String, String> formData = new MultivaluedHashMap<>();
         formData.add("school", schoolObject.getString("loginName"));
         formData.add("j_username", username);
         formData.add("j_password", password);
         formData.add("token", "");
         try {
-            Response response = target.request(MediaType.APPLICATION_JSON).post(Entity.form(formData));
+            Response response = target.request(MediaType.APPLICATION_JSON)
+                    .post(Entity.form(formData)); //Schick Post request mit den Login Daten. Diese werden als FormData versandt
+
             if (response == null || response.getStatus() == 302){
                 System.out.println("Failed");
                 loggedIn = false;
@@ -88,7 +92,7 @@ public class Backend {
             else if (response.getStatus() == 200) {
             Map<String, NewCookie> map = response.getCookies();
             System.out.println("Erfolgreich");
-            loginCookie = map.get("JSESSIONID");
+            loginCookie = map.get("JSESSIONID"); //Speichert den Cookie vom Erfolgreichen Login
             loggedIn = true;
             }
         }catch (Exception e){
@@ -113,7 +117,7 @@ public class Backend {
             this.target = this.client.target(url);
             response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
             JsonArray jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
-
+            List<Subject> subjectList = new LinkedList<>();
 
 
             for (int x = 0; x < jsonArray.size(); x++) {
@@ -129,12 +133,41 @@ public class Backend {
                 subTimePart1 = endTime.substring(0, endTime.length() - 2);
                 endTime = subTimePart1 + ":" + subTime;
 
+                String teacher = jsonObject.getString("teacher");
+                String room = jsonObject.getString("room");
 
-                list.add(subjects + "  " + startTime + "-" + endTime);
+
+                String backColor = jsonObject.getString("backColor");
+                LocalDateTime time = LocalDateTime.now();
+                if (backColor.contains("#a781b5")){
+                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                        subjectList.add(new Subject(subjects, startTime, endTime, "Supplierung", room, teacher));
+                    }
+                }
+                else if(backColor.contains("#b0bc00")){
+                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                        subjectList.add(new Subject(subjects, startTime, endTime, "Test oder ähnliches", room, teacher));
+                    }
+                }
+                else if(jsonObject.getBoolean("hasExam")){
+                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                        subjectList.add(new Subject(subjects, startTime, endTime, "Schularbeit/Test", room, teacher));
+                    }
+                }
+                else{
+                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()){
+                        subjectList.add(new Subject(subjects, startTime, endTime, room, teacher));
+                    }
+                }
+
+
 
                 //System.out.println(subjects + "  " + startTime + " " + endTime);
             }
 
+            for (int x = 0; x < subjectList.size(); x++){
+                list.add(subjectList.get(x).toString());
+            }
 
         }
         return list;
