@@ -66,7 +66,7 @@ public class Backend {
         }
     }
 
-    public void login(String username, String password){
+    public boolean login(String username, String password){
         readSchoolObj();
         serverName = schoolObject.getString("server");
         this.target = this.client.target("https://"+serverName+"/WebUntis/j_spring_security_check"); //Setzt das WebTarget auf den Secrurity Check vom WebUntis
@@ -83,21 +83,25 @@ public class Backend {
                 System.out.println("Failed");
                 loggedIn = false;
                 loginCookie = null;
+
             }
             else if (response.readEntity(String.class).contains("Your Browser is not supported. Please use IE10 or later!")){
                 System.out.println("Failed");
                 loggedIn = false;
                 loginCookie = null;
+
             }
             else if (response.getStatus() == 200) {
             Map<String, NewCookie> map = response.getCookies();
             System.out.println("Erfolgreich");
             loginCookie = map.get("JSESSIONID"); //Speichert den Cookie vom Erfolgreichen Login
             loggedIn = true;
+
             }
         }catch (Exception e){
             System.out.println("Falsches Passwort");
         }
+        return loggedIn;
     }
 
     public List<String> getDailyHours(){
@@ -112,7 +116,14 @@ public class Backend {
             int type = object.getInt("roleId");
             //System.out.println(id);
             LocalDate date = LocalDate.now();
-            String dateCode = date.getYear() + "" + date.getMonthValue() + date.getDayOfMonth();
+            String dateCode = date.getYear() + "" + date.getMonthValue();
+            if(Integer.valueOf(date.getDayOfMonth()) < 10){
+                dateCode += "0" + date.getDayOfMonth();
+            }
+            else
+            {
+                dateCode += date.getDayOfMonth();
+            }
             String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
             this.target = this.client.target(url);
             response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
