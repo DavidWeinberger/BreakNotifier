@@ -28,6 +28,7 @@ public class Backend {
     private String serverName;
     private JsonArray schoolList;
     private boolean loggedIn = false;
+    private JsonArray jsonArray;
 
     public static Backend getInstance() {
         if (instance == null)
@@ -41,29 +42,6 @@ public class Backend {
 
     private Backend(){
 
-    }
-
-    public void readSchoolObj(){ //Lest Schulnamen aus der Package.json Datei aus.
-        try {
-            BufferedReader br = new BufferedReader(new FileReader("src/package.json"));
-            if (br.readLine() != null) {
-                try (InputStream fis = new FileInputStream("src/package.json")) {
-                    //Read JSON file
-                    JsonReader reader = Json.createReader(fis);
-
-                    schoolObject = reader.readObject();
-
-                    reader.close();
-
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public boolean login(String username, String password){
@@ -104,19 +82,18 @@ public class Backend {
         return loggedIn;
     }
 
-    public List<String> getDailyHours(){
-        List<String> list = new LinkedList<>();
-        if (loggedIn == true) {
-            Response response;
-            this.target = this.client.target("https://" + serverName + "/WebUntis/api/app/config");
-            response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
-            JsonObject object = response.readEntity(JsonObject.class).getJsonObject("data").getJsonObject("loginServiceConfig").getJsonObject("user");
-            //System.out.println(object);
-            int id = object.getInt("personId");
-            int type = object.getInt("roleId");
-            //System.out.println(id);
-            LocalDate date = LocalDate.now();
-            String dateCode = date.getYear() + "" + date.getMonthValue();
+    public JsonArray readDailyHours(int day){
+        Response response;
+        this.target = this.client.target("https://" + serverName + "/WebUntis/api/app/config");
+        response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
+        JsonObject object = response.readEntity(JsonObject.class).getJsonObject("data").getJsonObject("loginServiceConfig").getJsonObject("user");
+        //System.out.println(object);
+        int id = object.getInt("personId");
+        int type = object.getInt("roleId");
+        //System.out.println(id);
+        LocalDate date = LocalDate.now();
+        String dateCode = date.getYear() + "" + date.getMonthValue();
+        if (day == 0){
             if(Integer.valueOf(date.getDayOfMonth()) < 10){
                 dateCode += "0" + date.getDayOfMonth();
             }
@@ -124,10 +101,28 @@ public class Backend {
             {
                 dateCode += date.getDayOfMonth();
             }
-            String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
-            this.target = this.client.target(url);
-            response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
-            JsonArray jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
+        }
+        else {
+            if(day < 10){
+                dateCode += "0" + day;
+            }
+            else
+            {
+                dateCode += day;
+            }
+        }
+
+        String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
+        this.target = this.client.target(url);
+        response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
+        jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
+        return jsonArray;
+    }
+
+    public List<String> getDailyHours(){
+        List<String> list = new LinkedList<>();
+        if (loggedIn == true) {
+            readDailyHours(0);
             List<Subject> subjectList = new LinkedList<>();
 
 
@@ -150,25 +145,25 @@ public class Backend {
 
                 String backColor = jsonObject.getString("backColor");
                 LocalDateTime time = LocalDateTime.now();
-                if (backColor.contains("#a781b5")){
-                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                if (backColor.contains("#a781b5") || teacher.contains("(")){
+                    //if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
                         subjectList.add(new Subject(subjects, startTime, endTime, "Supplierung", room, teacher));
-                    }
+                    //}
                 }
                 else if(backColor.contains("#b0bc00")){
-                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                    //if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
                         subjectList.add(new Subject(subjects, startTime, endTime, "Test oder ähnliches", room, teacher));
-                    }
+                    //}
                 }
                 else if(jsonObject.getBoolean("hasExam")){
-                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
+                    //if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()) {
                         subjectList.add(new Subject(subjects, startTime, endTime, "Schularbeit/Test", room, teacher));
-                    }
+                    //}
                 }
                 else{
-                    if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()){
+                    //if (jsonObject.getInt("endTime") > time.getHour()*100+time.getMinute()){
                         subjectList.add(new Subject(subjects, startTime, endTime, room, teacher));
-                    }
+                    //}
                 }
 
 
@@ -182,6 +177,31 @@ public class Backend {
 
         }
         return list;
+    }
+
+    //Select School
+    //-----------------------------------------
+    public void readSchoolObj(){ //Lest Schulnamen aus der Package.json Datei aus.
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("src/package.json"));
+            if (br.readLine() != null) {
+                try (InputStream fis = new FileInputStream("src/package.json")) {
+                    //Read JSON file
+                    JsonReader reader = Json.createReader(fis);
+
+                    schoolObject = reader.readObject();
+
+                    reader.close();
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public JsonObject getSchoolQueryResults(String input){
@@ -224,4 +244,5 @@ public class Backend {
         }
         return false;
     }
+    //------------------------------------------
 }

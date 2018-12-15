@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Controller extends Thread {
+    private UpdateThread updateThread = null;
     private boolean running = true;
     private Controller con = this;
     private Stage stage;
@@ -133,11 +134,12 @@ public class Controller extends Thread {
         username = usernameField.getText();
         password = passwordField.getText();
 
-
-        if(Backend.getInstance().login(username, password)){
-            UpdateThread updateThread = new UpdateThread(username, password, con);
+        if (updateThread == null && Backend.getInstance().login(username, password))
+        {
+            updateThread = new UpdateThread(username, password, con, Thread.currentThread());
             updateThread.start();
         }
+
         else {
             usernameField.setEditable(true);
             passwordField.setEditable(true);
