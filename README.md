@@ -19,4 +19,9 @@
     Lehrer rechtzeitig darauf vorbereiten können.
 # Projektstrukturplan
 # Anwendungsfalldiagramm
+    
 # Systemarchitektur
+    Wie man in dem folgenden Diagramm sieht, gfreit man direkt auf den Webuntis-Server zu.
+    Dies wird von Montag bis Freitag Täglich einmal gemacht, um zu kontrollieren ob sich der
+    Referenz-Stundenplan geändert hat. Wenn dies der Fall ist, bekommt man eine Benachrichtigung.
+    Dies kann nämlich bei Supplierungen passieren. 
