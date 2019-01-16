@@ -5,11 +5,15 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 import org.omg.PortableServer.THREAD_POLICY_ID;
+import org.json.simple.parser.JSONParser;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.stream.JsonParser;
 import java.io.*;
 
 import java.time.LocalDate;
@@ -46,6 +50,39 @@ public class UpdateThread extends Thread {
             }
         }
         else {
+            JSONParser parser = new JSONParser();
+            Object obj = null;
+            try {
+                obj = parser.parse(new FileReader("src/ReferenceTimetable.json"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            JSONObject object = (JSONObject) obj;
+            String date = object.get("dateTime").toString();
+            LocalDate localDate = LocalDate.now();
+            String[] dateElements = date.split("-");
+            if (localDate.getYear() == Integer.valueOf(dateElements[0])){
+                if (localDate.getMonthValue() == Integer.valueOf(dateElements[1])){
+                    if (localDate.minusDays(7).getDayOfMonth() <= Integer.valueOf(dateElements[2])){
+                        System.out.println("Its ok");
+                    }
+                    else {
+                        System.out.println("Day");
+                        updateReference();
+                    }
+                }
+                else {
+                    System.out.println("Month");
+                    updateReference();
+                }
+            }
+            else {
+                System.out.println("Year");
+                updateReference();
+            }
+            
             System.out.println("ToDo");
             
         }

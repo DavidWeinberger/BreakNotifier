@@ -92,7 +92,14 @@ public class Backend {
         int type = object.getInt("roleId");
         //System.out.println(id);
         LocalDate date = LocalDate.now();
-        String dateCode = date.getYear() + "" + date.getMonthValue();
+        String dateCode = date.getYear()+ "";
+        if (date.getMonthValue() < 10){
+             dateCode += "0" + date.getMonthValue();
+        }
+        else
+        {
+            dateCode += date.getMonthValue();
+        }
         if (day == 0){
             if(Integer.valueOf(date.getDayOfMonth()) < 10){
                 dateCode += "0" + date.getDayOfMonth();
@@ -112,10 +119,15 @@ public class Backend {
             }
         }
 
+
+
         String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
+        System.out.println(serverName+ " " + dateCode+" "+ id +" "+ type);
+        //https://mese.webuntis.com/WebUntis/api/daytimetable/dayLesson?date=20190107&id=728&type=5
         this.target = this.client.target(url);
         response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
         jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
+        System.out.println(jsonArray);
         return jsonArray;
     }
 
