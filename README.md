@@ -18,10 +18,14 @@
     Dazu kommt noch eine Benachrichtigung für bevorstehende Tests oder Schularbeiten, damit sich Schüler und
     Lehrer rechtzeitig darauf vorbereiten können.
 # Projektstrukturplan
+![PSP](https://github.com/DavidWeinberger/BreakNotifier/blob/master/Fotos/ProjectStructer.png)
 # Anwendungsfalldiagramm
-    
+  ![Anwendungsfalldiagramm](https://github.com/DavidWeinberger/BreakNotifier/blob/master/Fotos/Use%20Cases.png)  
 # Systemarchitektur
     Wie man in dem folgenden Diagramm sieht, gfreit man direkt auf den Webuntis-Server zu.
     Dies wird von Montag bis Freitag Täglich einmal gemacht, um zu kontrollieren ob sich der
     Referenz-Stundenplan geändert hat. Wenn dies der Fall ist, bekommt man eine Benachrichtigung.
-    Dies kann nämlich bei Supplierungen passieren. 
+    Dies kann nämlich bei Supplierungen passieren.
+  
+ ![Systemarchitektur](https://github.com/DavidWeinberger/BreakNotifier/blob/master/Fotos/Untitled%20Diagram.png) 
+    
