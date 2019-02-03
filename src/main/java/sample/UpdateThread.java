@@ -11,12 +11,14 @@ import org.omg.PortableServer.THREAD_POLICY_ID;
 import org.json.simple.parser.JSONParser;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.stream.JsonParser;
 import java.io.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 
 public class UpdateThread extends Thread {
@@ -125,15 +127,38 @@ public class UpdateThread extends Thread {
     public void run() {
         checkReference();
         LocalDate dateTime;
+        boolean dailyUpdate = true;
         boolean sundayUpdate = false;
         //updateReference();
         while (parent.isAlive()) {
+            if (LocalDateTime.now().getHour() < 8)
+            {
+                dailyUpdate = true;
+            }
             dateTime = LocalDate.now();
             if (dateTime.getDayOfWeek().getValue() == 7 && sundayUpdate == false) {
                 updateReference();
                 System.out.println("Sunday update");
                 sundayUpdate = true;
 
+            }
+            else if(dailyUpdate)
+            {
+                dailyUpdate = false;
+                Backend.getInstance().login(username, password);
+                JsonArray jsonArray = Backend.getInstance().readDailyHours(0);
+                System.out.println(jsonArray);
+                JSONParser parser = new JSONParser();
+                try {
+                    Object obj = parser.parse(new FileReader("src/ReferenceTimetable.json"));
+                    JsonObject jsonObject = (JsonObject)obj;
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             try {
                 Thread.sleep(300);

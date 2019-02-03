@@ -127,7 +127,7 @@ public class Backend {
         this.target = this.client.target(url);
         response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();
         jsonArray = response.readEntity(JsonObject.class).getJsonObject("data").getJsonArray("dayTimeTable");
-        System.out.println(jsonArray);
+        //System.out.println(jsonArray);
         return jsonArray;
     }
 
