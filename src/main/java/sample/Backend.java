@@ -122,7 +122,7 @@ public class Backend {
 
 
         String url = "https://" + serverName + "/WebUntis/api/daytimetable/dayLesson?date=" + dateCode + "&id=" + String.valueOf(id) + "&type=" + type;
-        System.out.println(serverName+ " " + dateCode+" "+ id +" "+ type);
+        //System.out.println(serverName+ " " + dateCode+" "+ id +" "+ type);
         //https://mese.webuntis.com/WebUntis/api/daytimetable/dayLesson?date=20190107&id=728&type=5
         this.target = this.client.target(url);
         response = target.request(MediaType.APPLICATION_JSON).cookie(loginCookie).get();

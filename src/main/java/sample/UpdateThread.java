@@ -5,16 +5,15 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.omg.PortableServer.THREAD_POLICY_ID;
 import org.json.simple.parser.JSONParser;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
+import javax.json.*;
 import javax.json.stream.JsonParser;
+import javax.json.stream.JsonParserFactory;
 import java.io.*;
 
 import java.time.LocalDate;
@@ -67,10 +66,11 @@ public class UpdateThread extends Thread {
             String[] dateElements = date.split("-");
             if (localDate.getYear() == Integer.valueOf(dateElements[0])){
                 if (localDate.getMonthValue() == Integer.valueOf(dateElements[1])){
-                    if (localDate.minusDays(7).getDayOfMonth() <= Integer.valueOf(dateElements[2])){
+                    if (localDate.minusDays(7).getDayOfMonth() <= Integer.valueOf(dateElements[2]) || localDate.minusDays(7).getMonthValue() < localDate.getMonthValue() ){
                         System.out.println("Its ok");
                     }
                     else {
+                        System.out.println(localDate.minusDays(7).getDayOfMonth());
                         System.out.println("Day");
                         updateReference();
                     }
@@ -85,7 +85,7 @@ public class UpdateThread extends Thread {
                 updateReference();
             }
             
-            System.out.println("ToDo");
+            //System.out.println("ToDo");
             
         }
         //updateReference();
@@ -127,38 +127,66 @@ public class UpdateThread extends Thread {
     public void run() {
         checkReference();
         LocalDate dateTime;
+        LocalDateTime time;
+        int dayNumber = 0;
         boolean dailyUpdate = true;
         boolean sundayUpdate = false;
         //updateReference();
         while (parent.isAlive()) {
+            time = LocalDateTime.now();
             if (LocalDateTime.now().getHour() < 8)
             {
                 dailyUpdate = true;
             }
             dateTime = LocalDate.now();
             if (dateTime.getDayOfWeek().getValue() == 7 && sundayUpdate == false) {
+                referenceSaved = false;
                 updateReference();
                 System.out.println("Sunday update");
                 sundayUpdate = true;
 
             }
-            else if(dailyUpdate)
+            else if(dailyUpdate && dateTime.getDayOfWeek().getValue() >= 1 && dateTime.getDayOfWeek().getValue() <= 5 && time.getHour() <= 7)
             {
+                System.out.println("Daily Update");
+                dayNumber = dateTime.getDayOfWeek().getValue();
                 dailyUpdate = false;
                 Backend.getInstance().login(username, password);
                 JsonArray jsonArray = Backend.getInstance().readDailyHours(0);
-                System.out.println(jsonArray);
-                JSONParser parser = new JSONParser();
+                System.out.println("Output:  "+ jsonArray);
+
+
                 try {
-                    Object obj = parser.parse(new FileReader("src/ReferenceTimetable.json"));
-                    JsonObject jsonObject = (JsonObject)obj;
-                } catch (ParseException e) {
-                    e.printStackTrace();
+                    JsonParser parser = Json.createParser(new FileReader("src/ReferenceTimetable.json"));
+                    parser.next();
+                    int value = dateTime.getDayOfWeek().getValue()-1;
+                    JsonObject readedObject = parser.getObject();
+                    JsonArray week = readedObject.getJsonArray("week");
+                    JsonObject day = week.getJsonObject(value);
+                    String dayImportet = day.toString();
+                    String compareDay = "{\"" + value +"\":"+jsonArray + "}";
+                    //System.out.println(compareDay);
+                    //System.out.println( dayImportet);
+                    if (compareDay.equals(dayImportet)){
+                        System.out.println("Keine Abweichung");
+                    }
+                    else
+                    {
+                        System.out.println("Stundenplan hat abweichungen");
+                    }
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                System.out.println("\n\n\n");
+            }
+            else if (dayNumber != dateTime.getDayOfWeek().getValue()){
+                dailyUpdate = true;
+            }
+            else if (dateTime.getDayOfWeek().getValue() != 7)
+            {
+                sundayUpdate = false;
             }
             try {
                 Thread.sleep(300);
